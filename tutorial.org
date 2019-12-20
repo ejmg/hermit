@@ -1,0 +1,146 @@
+
+* rocket mega-tutorial
+  i truly have no clue what i am doing. ideally, you will instead opt to learn from [[https://Rocket.rs][Rocket.rs]]
+  directly and take the time to learn how to use the framework properly using Rocket's fantastic
+  documentation.
+
+  But, since you are here after all...
+
+** preliminaries
+   this document is a rustic "porting", of sorts, for Miguel Grinberg's [[https://courses.miguelgrinberg.com/p/flask-mega-tutorial][Flask Mega-Tutorial]]. This
+   guide wouldn't be a thing without it, and I highly recommend it for anyone interested in learning
+   Python, Flask, and even web-dev generally (especially from a non-JS centric perspective). My port
+   is not the guide to learn these things!
+
+   furthermore, as i said earlier, i don't want this guide being taken as authoritative or as
+   indicating any intelligence on the part of the author; ideally, you would also not take it as an
+   indicator that i'm cognitively lacking substance.
+
+   while this document is predicated off of the Flask Mega Tutorial, it's hardly *mega*, i.e. i will
+   not be anywhere as thorough as Grinberg in explaining everything. A major motivation for writing
+   this guide is simply to teach myself how to use Rocket in the context of another application I've
+   built before, so I won't bother with filling in the details I already know (or don't need to
+   know). This is the third warning in the guide, so please don't say I didn't say something
+   sooner.
+
+   finally, ideally you will have experience with Rust. i won't say that you need to read the whole
+   rust book or anything like that, but the intro chapter written below should not be your first
+   experience with tools like =Rustup= or =Cargo=, nor should you be unfamiliar with things like project
+   organization or how dependencies work.
+
+   aight, let's just get to it i guess.
+** chapter 1: Hello, World!
+   Not much to be done in this chapter, but, then again, so begins most major endeavors with
+   software - bad and good alike.
+*** Installing Rust
+
+    It's as easy as [[https://rustup.rs/][rustup]]. For n*x systems, that looks like:
+    #+BEGIN_SRC sh
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+    #+END_SRC
+
+    Rocket uses Nightly Rust due to its reliance on advanced macro and compiler features for its
+    ergonomic API and ease-of-use. Thus, you'll want to run:
+
+    #+BEGIN_SRC sh
+    rustup install nightly
+    #+END_SRC
+
+    ... and to make nightly your default toolchain, you can also run:
+
+    #+BEGIN_SRC sh
+    rustup default nightly
+    #+END_SRC
+
+    Booyah, that's it. By installing rust with =rustup=, you also got access to things like =Cargo=, the
+    rust package ('crates', as they're known) manager that also doubles as a build and project
+    management tool. No weird virtual env problems, incompatibilities between the packaging tool and
+    the project code itself, etc. It Just Works 😍🦀😍
+
+*** "Hello, World" App
+
+    In the directory of your choice, run the following:
+
+    #+BEGIN_SRC sh
+    cargo new hermit
+    #+END_SRC
+
+    This will create a new sub-directory called =hermit=, initialized with the skeleton of a basic
+    Rust binary (i.e. executable) project. The outline looks like:
+
+    #+begin_verse
+    spook@haunt:~/code/lrn/rs/hermit
+
+    💀 ↛  tree
+    .
+    ├── Cargo.toml
+    └── src
+        └── main.rs
+    #+end_verse
+
+    Cargo.toml is the configuration file for the project as whole. You will list your dependencies
+    in there along with other data, like authorship, akin to a =package.json= or =setup.py=
+    file... sorta.
+
+    =main.rs= is where all the action for a bin project lives. It's in here where, for small to moderate
+    sized projects, at least, the actual program driver will exist.
+
+    Go into =Cargo.toml= and put under the =[dependencies]= section:
+
+    #+BEGIN_SRC toml
+    [dependencies]
+    rocket = { git = "https://github.com/SergioBenitez/Rocket", branch = "async"}
+    #+END_SRC
+
+    This sets us up to use the Async version of Rocket by pointing =cargo= directly to the git repo
+    and the branch with this feature. While we won't be using Async any time soon, this lets us
+    track our project against the Async version of Rocket and at least be positioned to use it.
+    
+    If you don't want to peg your project against a branch like this, you can readily substitute the
+    following dependency instead:
+    
+    #+BEGIN_SRC toml
+    [dependencies]
+    rocket = "0.4.2"
+    #+END_SRC
+
+    Now in =main.rs=, put the following statements:
+
+    #+BEGIN_SRC rust
+      #![feature(proc_macro_hygiene, decl_macro)]
+      #[macro_use]
+      extern crate rocket;
+
+      #[get("/")]
+      fn index() -> &'static str {
+          "hello, world!"
+      }
+
+      fn main() {
+          rocket::ignite()
+              .mount("/", routes![index])
+              .launch();
+      }
+    #+END_SRC
+
+    ... and once you run =cargo run=, you should see something like:
+
+    #+BEGIN_SRC sh
+      Finished dev [unoptimized + debuginfo] target(s) in 0.05s
+      Running `target/debug/hermit`
+      🔧 Configured for development.
+          => address: localhost
+          => port: 8000
+          => log: normal
+          => workers: 16
+          => secret key: generated
+          => limits: forms = 32KiB
+          => keep-alive: 5s
+          => tls: disabled
+      🛰  Mounting /:
+          => GET / (index)
+      🚀 Rocket has launched from http://localhost:8000
+    #+END_SRC
+
+Accessing the url [[http://localhost:8000]] should give you a friendly hello from Rocket! Congrats, you
+made your first rust web app (maybe! I don't know you!).
