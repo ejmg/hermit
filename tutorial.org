@@ -23,10 +23,13 @@
    know). This is the third warning in the guide, so please don't say I didn't say something
    sooner.
 
-   finally, ideally you will have experience with Rust. i won't say that you need to read the whole
+   also, ideally, you will have experience with Rust. i won't say that you need to read the whole
    rust book or anything like that, but the intro chapter written below should not be your first
    experience with tools like =Rustup= or =Cargo=, nor should you be unfamiliar with things like project
    organization or how dependencies work.
+
+   finally, this is very much a WIP. i will skip over explanations aggressively early on, assuming i
+   ever get to them.
 
    aight, let's just get to it i guess.
 ** chapter 1: Hello, World!
@@ -68,7 +71,7 @@
     This will create a new sub-directory called =hermit=, initialized with the skeleton of a basic
     Rust binary (i.e. executable) project. The outline looks like:
 
-    #+begin_verse
+    #+begin_src sh
     spook@haunt:~/code/lrn/rs/hermit
 
     💀 ↛  tree
@@ -76,7 +79,7 @@
     ├── Cargo.toml
     └── src
         └── main.rs
-    #+end_verse
+    #+end_src
 
     Cargo.toml is the configuration file for the project as whole. You will list your dependencies
     in there along with other data, like authorship, akin to a =package.json= or =setup.py=
@@ -87,18 +90,6 @@
 
     Go into =Cargo.toml= and put under the =[dependencies]= section:
 
-    #+BEGIN_SRC toml
-    [dependencies]
-    rocket = { git = "https://github.com/SergioBenitez/Rocket", branch = "async"}
-    #+END_SRC
-
-    This sets us up to use the Async version of Rocket by pointing =cargo= directly to the git repo
-    and the branch with this feature. While we won't be using Async any time soon, this lets us
-    track our project against the Async version of Rocket and at least be positioned to use it.
-    
-    If you don't want to peg your project against a branch like this, you can readily substitute the
-    following dependency instead:
-    
     #+BEGIN_SRC toml
     [dependencies]
     rocket = "0.4.2"
@@ -144,3 +135,59 @@
 
 Accessing the url [[http://localhost:8000]] should give you a friendly hello from Rocket! Congrats, you
 made your first rust web app (maybe! I don't know you!).
+
+** chapter 2: templates
+   
+*** what are templates?
+
+    templates are html pages that allow for "custom" content in that the templated pages, along with
+    variables holding template values (like a user's name, age, etc), get fed into a template engine
+    that parse and inject the variable values into the rendered page.
+
+    with Rocket, the ability to use a templating engine is provided in the crate =rocket_contrib=,
+    which contains various community developed utilities used by Rocket's end users. one such
+    functionality is templating. let's start.
+
+    update =Cargo.toml= to reflect the following:
+
+    #+BEGIN_SRC toml
+    [dependencies]
+    rocket = "0.4.2"
+    serde = "1.0"
+    serde_derive = "1.0"
+    serde_json = "1.0"
+
+    [dependencies.rocket_contrib]
+    version = "0.4.2"
+    default-features = false
+    features = ["json", "tera_templates"]
+    #+END_SRC
+
+    we can now begin the process of making our little application feel more customized and dynamic.
+
+    from the project root, make a new subdirectory =templates/= and create the file =index.tera= with
+    the following content:
+
+    #+BEGIN_SRC html
+      <html>
+        <head>
+          <title>Home Page - Hermitblog</title>
+        </head>
+        <body>
+          <h1>Hello, {{ name }}!</h1>
+        </body>
+      </html>
+    #+END_SRC
+
+    your project should have the following structure now:
+
+    #+BEGIN_SRC sh
+    .
+    ├── Cargo.lock
+    ├── Cargo.toml
+    ├── rust-toolchain
+    ├── src
+    │   └── main.rs
+    └── templates
+        └── index.tera
+    #+END_SRC
