@@ -248,7 +248,7 @@
 
     2. attach the =Fairing= to our rocket application
 
-       a =[[https://api.rocket.rs/v0.4/rocket/fairing/trait.Fairing.html][Fairing]]= in Rocket is, in effect, a type of Middleware. in web apps, this translates to
+       a [[https://api.rocket.rs/v0.4/rocket/fairing/trait.Fairing.html][=Fairing=]] in Rocket is, in effect, a type of Middleware. in web apps, this translates to
        things such as templating, database handling, security mechanisms (CSRF, CORS, etc), and
        other concerns that often take place between Requests/Responses passed between the server and
        client.
