@@ -4,19 +4,17 @@ extern crate rocket;
 #[macro_use]
 extern crate serde_derive;
 
-use serde::Serialize;
-
 use rocket_contrib::templates::Template;
 
 #[derive(Serialize)]
-pub struct TemplateCtx {
+pub struct TemplateContext {
     name: &'static str,
 }
 
 #[get("/")]
 fn index() -> Template {
     let users = ["ghostface killah", "spook", "elias"];
-    Template::render("index", &TemplateCtx { name: users[0] })
+    Template::render("index", &TemplateContext { name: users[0] })
 }
 
 fn main() {

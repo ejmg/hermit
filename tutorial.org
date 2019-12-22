@@ -28,8 +28,10 @@
    experience with tools like =Rustup= or =Cargo=, nor should you be unfamiliar with things like project
    organization or how dependencies work.
 
-   finally, this is very much a WIP. i will skip over explanations aggressively early on, assuming i
-   ever get to them.
+   finally, *this is very much a WIP*. /i will skip over explanations aggressively early on/, assuming i
+   ever get to them. the goal is to make it through the meat of the material, write the bare minimum
+   to keep track/serve as checkpoints for where my work is relative the book itself, and then come
+   back to fill in the numerous holes and details left in the wake.
 
    aight, let's just get to it i guess.
 ** chapter 1: Hello, World!
@@ -133,8 +135,8 @@
       🚀 Rocket has launched from http://localhost:8000
     #+END_SRC
 
-Accessing the url [[http://localhost:8000]] should give you a friendly hello from Rocket! Congrats, you
-made your first rust web app (maybe! I don't know you!).
+    Accessing the url [[http://localhost:8000]] should give you a friendly hello from Rocket! Congrats, you
+    made your first rust web app (maybe! I don't know you!).
 
 ** chapter 2: templates
    
@@ -160,7 +162,7 @@ made your first rust web app (maybe! I don't know you!).
     [dependencies.rocket_contrib]
     version = "0.4.2"
     default-features = false
-    features = ["json", "tera_templates"]
+    features = ["tera_templates"]
     #+END_SRC
 
     we can now begin the process of making our little application feel more customized and dynamic.
@@ -191,3 +193,140 @@ made your first rust web app (maybe! I don't know you!).
     └── templates
         └── index.tera
     #+END_SRC
+
+    Now, in main, pull in the following crates:
+
+    #+BEGIN_SRC rust
+      #[macro_use]
+      extern crate serde_derive;
+
+      use rocket_contrib::templates::Template;
+    #+END_SRC
+
+    Going back to our =index= route, let's now update it to be "dynamic" (bear with me, it will
+    progress as we get further along) by adding the following changes:
+
+    #+BEGIN_SRC rust
+      #[get("/")]
+      fn index() -> Template {
+          let users = ["ghostface killah", "spook", "elias"];
+          Template::render("index", &TemplateContext { name: users[0] })
+      }
+    #+END_SRC
+
+    as it stands, this will not compile for a few reasons. bear with me for a moment for a small
+    diversion.
+
+    we've now changed the return type to =Template=, which is what our route returns to a request that
+    matches on our root index route, ="/"=. We have an array users that I've filled with dummy data,
+    and in our actual reply we render a template called ="index"=, which is that tera template we
+    defined earlier, and then you'll notice we construct an object called =TemplateCtx= which has a
+    single field, =name=. Let's look at that.
+    
+    
+    before addressing templating, it might be worth briefly touching on =rocket_contrib= as a
+    crate. Web programming has a lot of interrelated components such as handling cookies,
+    templating, and database management; however, it's not necessarily a good thing to include the
+    libraries that handle all of this in the core library of a web framework. consequentially,
+    =Rocket= opts to package these libraries separately under the crate =rocket_contrib=, which
+    altogether makeup "officially sanctioned" contributor libraries that achieve features as
+    mentioned previously.
+
+    for templating, then, we would want to use =rocket_contrib::tera_templates=. what exactly is
+    involved when we want to use Rocket's templating facilities?
+
+    1. enabling it
+
+       you already saw this with the updated =Cargo.toml= snippet; we had to specifically enable this
+       feature via the =features= attribute for the dependency. All features are disabled by default
+       because of the effect it would otherwise have on compile times (8 or so dbs engines + 2
+       templating engines!) along with keeping the dependency surface smaller, i.e. smaller
+       binaries.
+
+       hereon, for every additional feature we want out of =rocket_contrib=, we'll have to first
+       enable it in the =Cargo.toml= listing.
+
+    2. attach the =Fairing= to our rocket application
+
+       a =[[https://api.rocket.rs/v0.4/rocket/fairing/trait.Fairing.html][Fairing]]= in Rocket is, in effect, a type of Middleware. in web apps, this translates to
+       things such as templating, database handling, security mechanisms (CSRF, CORS, etc), and
+       other concerns that often take place between Requests/Responses passed between the server and
+       client.
+
+       Adding a provided Fairing is trivial in Rocket:
+
+       #+BEGIN_SRC rust
+         fn main() {
+             rocket::ignite()
+                 .attach(Template::fairing())
+                 .mount("/", routes![index])
+                 .launch();
+         }
+       #+END_SRC
+
+       this will now allow our templating fairing to handle requests/responses that involve
+       templating logic!
+
+    3. Templating itself
+
+       this has a few components. First-off, you return the =Template= type on the route involved,
+       obviously. we've already accomplished this much, but let's return back to that snippet:
+
+       #+BEGIN_SRC rust
+         #[get("/")]
+         fn index() -> Template {
+             let users = ["ghostface killah", "spook", "elias"];
+             Template::render("index", &TemplateContext { name: users[0] })
+         }
+       #+END_SRC
+
+       so we see immediately that the return type has changed to =Template=, as it ought to, and in
+       the body we mock the notion of users with an array of not-necessarily-random names. finally a
+       call is made to =Template::render()=, where we pass two things:
+
+       1) the name of the template to render through our engine
+
+       2) a =Context= object, i.e. anything that implements the =Serialize= trait.
+
+          For our current example, our =Context= object is defined as follows:
+
+          #+BEGIN_SRC rust
+            #[derive(Serialize)]
+            pub struct TemplateContext {
+                name: &'static str,
+            }
+          #+END_SRC
+
+          where =Serialize= is a derivable trait provided by =serde_derive=, which also explains why i
+          included that in our updated =Cargo.toml= and imports for =main.rs=. while =TemplateContext= is
+          a trivial structure currently, it's important to note that by using a custom struct, as
+          opposed to a =HashMap=, we will be allowed a lot more customization in the near future by
+          simply adding extra fields that provide important information to our templating engine.
+
+          finally, speaking of fields, note that =name=, being our only field, is what we are
+          ultimately passing to the template. recall the template itself:
+
+          #+BEGIN_SRC html
+            <html>
+                <head>
+                    <title>Home Page - Hermitblog</title>
+                </head>
+                <body>
+                    <h1>Hello, {{ name }}!</h1>
+                </body>
+            </html>
+          #+END_SRC
+
+          note the expression in our h1 tag, ={{ name }}=. this is a Tera Expression where =name= is a
+          variable passed by the context of the templating engine!
+
+          
+    With the provided =TemplateContext= struct and updated =main.rs= function above, you should now be
+    able to successfully execute =cargo run= and see the template at work. nice!
+
+    a final note: try changing the variable =name= in =index.tera= to =foo=. after recompiling the
+    project, visiting =localhost:8000= will lead to a 500 error as Rocket will fail to find any
+    variable named =foo= provided to the template. keep this in mind when defining your contexts and
+    templates.
+
+       
