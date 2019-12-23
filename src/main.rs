@@ -12,7 +12,7 @@ pub struct Post {
 }
 
 #[derive(Serialize)]
-pub struct UserContext {
+pub struct PageContext {
     title: &'static str,
     posts: Vec<Post>,
     name: &'static str,
@@ -36,7 +36,7 @@ And tell the driver to stay put",
     ];
     Template::render(
         "index",
-        &UserContext {
+        &PageContext {
             title: "Home",
             posts: ghost_face_posts,
             name: users[0],
