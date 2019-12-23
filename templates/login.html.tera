@@ -1,0 +1,23 @@
+{% extends "base" %}
+
+{% block content %}
+    <h1>sign in</h1>
+    <form action="post">
+        <input name="csrf_token" type="hidden" value="{{csrf_token}}"/>
+        <p>
+            <label for="username">username</label><br/>
+            <input name="username" id="username" size="32" type="text" value=""/>
+        </p>
+        <p>
+            <label for="password">password</label><br/>
+            <input name="password" id="password" size="32" type="password" value=""/>
+        </p>
+        <p>
+            <input type="checkbox" name="remember" id="remember" value="y" />
+            <label for="remember">remember me</label>
+        </p>
+        <p>
+            <input name="submit" type="submit" id="submit" value="sign in"/>
+        </p>
+    </form>
+{% endblock content %}

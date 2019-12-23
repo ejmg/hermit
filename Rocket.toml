@@ -1,0 +1,9 @@
+[development]
+address = "localhost"
+port = 8000
+keep_alive = 5
+log = "normal"
+# this should actually be secret and not committed anywhere and possibly kept exclusively to an env variable. do not use the value
+# included in this example config in actual prod code!
+secret_key = "zHliJJVpfORoPoTwsFDj9a77zYhnBzXuDX7VtjHplV4="
+limits = { forms = 32768 }

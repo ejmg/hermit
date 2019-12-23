@@ -6,6 +6,16 @@ extern crate serde_derive;
 
 use rocket_contrib::templates::Template;
 
+use rocket::http::{Cookie, Cookies};
+
+#[derive(Serialize)]
+pub struct LoginForm {
+    username: String,
+    password: String,
+    remember_me: bool,
+    submit: &'static str,
+}
+
 #[derive(Serialize)]
 pub struct Post {
     body: &'static str,
@@ -16,6 +26,25 @@ pub struct PageContext {
     title: &'static str,
     posts: Vec<Post>,
     name: &'static str,
+}
+
+#[derive(Serialize)]
+pub struct LoginContext {
+    csrf_token: &'static str,
+}
+
+#[get("/login")]
+fn login(mut cookies: Cookies) -> Template {
+    // TODO set private cookie
+    cookies.add_private(Cookie::new("user", "value"));
+    // TODO progmatically generate csrf token
+    // TODO associate private cookie with csrf token and store it
+    Template::render(
+        "login",
+        &LoginContext {
+            csrf_token: "FOOBAR",
+        },
+    )
 }
 
 #[get("/")]
@@ -47,6 +76,6 @@ And tell the driver to stay put",
 fn main() {
     rocket::ignite()
         .attach(Template::fairing())
-        .mount("/", routes![index])
+        .mount("/", routes![index, login])
         .launch();
 }
