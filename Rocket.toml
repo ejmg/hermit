@@ -3,7 +3,14 @@ address = "localhost"
 port = 8000
 keep_alive = 5
 log = "normal"
+# *** NOTE ***
+# ------------
 # this should actually be secret and not committed anywhere and possibly kept exclusively to an env variable. do not use the value
 # included in this example config in actual prod code!
+# ------------
 secret_key = "zHliJJVpfORoPoTwsFDj9a77zYhnBzXuDX7VtjHplV4="
+# a separate key is required for csrf generation because the explicit value of secret_key is not available to a rocket application
+# at run time; however, all other toml values are, ergo csrf_secret_key.
+# Similar to secret_key, DO NOT COMMIT this in publicly available code!
+csrf_secret_key = "zkVLsc2pKescgc8IC5pRaJV+WcPptr0k016qg4BOr0I="
 limits = { forms = 32768 }

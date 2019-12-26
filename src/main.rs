@@ -6,7 +6,9 @@ extern crate serde_derive;
 
 use rocket_contrib::templates::Template;
 
+use rocket::fairing::AdHoc;
 use rocket::http::{Cookie, Cookies};
+struct CsrfSecret(String);
 
 #[derive(Serialize)]
 pub struct LoginForm {
@@ -47,6 +49,11 @@ fn login(mut cookies: Cookies) -> Template {
     )
 }
 
+#[get("/index")]
+fn index_redir() -> Redirect {
+    Redirect::permanent("/")
+}
+
 #[get("/")]
 fn index() -> Template {
     let users = ["ghostface killah", "spook", "elias"];
@@ -76,6 +83,15 @@ And tell the driver to stay put",
 fn main() {
     rocket::ignite()
         .attach(Template::fairing())
-        .mount("/", routes![index, login])
+        .attach(AdHoc::on_attach("CSRF Secret Key", |rocket| {
+            let csrf_secret = rocket
+                .config()
+                .get_str("csrf_secret_key")
+                .unwrap_or("csrf-secret-key-here")
+                .to_string();
+
+            Ok(rocket.manage(CsrfSecret(csrf_secret)))
+        }))
+        .mount("/", routes![index, index_redir, login])
         .launch();
 }
