@@ -13,14 +13,14 @@ use rocket::response::{Flash, Redirect};
 use rocket::State;
 use rocket_contrib::templates::Template;
 use std::collections::HashMap;
-use std::sync::Mutex;
+use std::sync::RwLock;
 
 struct AppConfig {
     pub aes_generator: AesGcmCsrfProtection,
     pub csrf_auth_tokens: HashMap<CsrfCookie, CsrfToken>,
 }
 
-type HermitConfig = Mutex<AppConfig>;
+type HermitConfig = RwLock<AppConfig>;
 struct CsrfSecret(String);
 
 #[derive(Serialize)]
@@ -49,8 +49,8 @@ pub struct LoginContext {
 }
 
 #[get("/login")]
-fn login<'r>(mut cookies: Cookies, state: State<'r, HermitConfig>) -> Template {
-    let mut cfg = state.lock().expect("Config locked by Reader");
+fn login(mut cookies: Cookies, state: State<HermitConfig>) -> Template {
+    let mut cfg = state.write().expect("Config locked by Reader");
 
     let (token, cookie) = (cfg)
         .aes_generator
@@ -123,7 +123,7 @@ fn main() {
                 Some(secret) => {
                     arr_secret.copy_from_slice(&secret.0.as_bytes()[0..32]);
 
-                    Ok(rocket.manage(Mutex::new(AppConfig {
+                    Ok(rocket.manage(RwLock::new(AppConfig {
                         aes_generator: AesGcmCsrfProtection::from_key(arr_secret),
                         csrf_auth_tokens: HashMap::new(),
                     })))
