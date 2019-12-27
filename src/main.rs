@@ -7,8 +7,10 @@ extern crate serde_derive;
 use csrf::{AesGcmCsrfProtection, CsrfCookie, CsrfProtection, CsrfToken};
 use data_encoding::BASE64;
 use rocket::fairing::AdHoc;
+use rocket::http::RawStr;
 use rocket::http::{Cookie, Cookies};
 use rocket::request::FlashMessage;
+use rocket::request::{Form, FromFormValue, LenientForm};
 use rocket::response::{Flash, Redirect};
 use rocket::State;
 use rocket_contrib::templates::Template;
@@ -23,12 +25,14 @@ struct AppConfig {
 type HermitConfig = RwLock<AppConfig>;
 struct CsrfSecret(String);
 
-#[derive(Serialize)]
-pub struct LoginForm {
-    username: String,
-    password: String,
+// TODO impl explicit username and password types
+// TODO impl FromFormValue impl's that enforce validation constraints on explicit types from
+// above Todo item
+#[derive(FromForm)]
+pub struct LoginForm<'f> {
+    username: &'f RawStr,
+    password: &'f RawStr,
     remember_me: bool,
-    submit: &'static str,
 }
 
 #[derive(Serialize)]
@@ -46,11 +50,18 @@ pub struct PageContext {
 #[derive(Serialize)]
 pub struct LoginContext {
     csrf_token: String,
+    flash: String,
 }
 
-#[get("/login")]
-fn login(mut cookies: Cookies, state: State<HermitConfig>) -> Template {
-    let mut cfg = state.write().expect("Config locked by Reader");
+#[get("/login", rank = 0)]
+fn login(
+    flash: Option<FlashMessage>,
+    mut cookies: Cookies,
+    state: State<HermitConfig>,
+) -> Template {
+    let mut cfg = state
+        .write()
+        .expect("Cannot write, config locked by Readers");
 
     let (token, cookie) = (cfg)
         .aes_generator
@@ -64,21 +75,55 @@ fn login(mut cookies: Cookies, state: State<HermitConfig>) -> Template {
 
     cookies.add_private(Cookie::new("hermit-session", cookie_str));
 
+    drop(cookies);
+
+    let mut s = String::new();
+
+    if let Some(ref msg) = flash {
+        println!("value of msg.msg(): {:?}", msg.msg());
+        s = String::from(msg.msg());
+    }
+
     Template::render(
         "login",
         &LoginContext {
             csrf_token: token_str,
+            flash: s,
         },
     )
 }
 
+#[post("/login", data = "<login>")]
+fn login_submit(
+    state: State<HermitConfig>,
+    login: LenientForm<LoginForm>,
+    mut cookies: Cookies,
+) -> Result<Flash<Redirect>, Flash<Redirect>> {
+    let mut cfg = state.read().expect("Cannot read, config locked by Writer");
+    println!("value of login.username: {:?}", login.username.as_str());
+    println!("value of login.password: {:?}", login.password.as_str());
+
+    if login.username.as_str() != "" && login.password.as_str() != "" {
+        println!("About to redirect...");
+        Ok(Flash::success(
+            Redirect::to(uri!(login)),
+            "Successfully logged in!",
+        ))
+    } else {
+        println!("Error on login...");
+        Err(Flash::error(
+            Redirect::to(uri!(login)),
+            "Invalid username/password.",
+        ))
+    }
+}
 #[get("/index")]
 fn index_redir() -> Redirect {
     Redirect::permanent("/")
 }
 
 #[get("/")]
-fn index() -> Template {
+fn index(flash: Option<FlashMessage>) -> Template {
     let users = ["ghostface killah", "spook", "elias"];
     let ghost_face_posts = vec![
         Post {
@@ -131,6 +176,14 @@ fn main() {
                 None => panic!("No CsrfSecret, unable to generate AppConfig struct"),
             }
         }))
-        .mount("/", routes![index, index_redir, login])
+        .mount(
+            "/",
+            routes![
+                index,
+                index_redir,
+                login,
+                login_submit,
+            ],
+        )
         .launch();
 }

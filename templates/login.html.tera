@@ -1,8 +1,11 @@
 {% extends "base" %}
 
 {% block content %}
+    {% if flash %}
+        <p><strong>{{ flash }}</strong></p>
+    {% endif %}
     <h1>sign in</h1>
-    <form action="post">
+    <form action="/login" method="post">
         <input name="csrf_token" type="hidden" value="{{csrf_token}}"/>
         <p>
             <label for="username">username</label><br/>
