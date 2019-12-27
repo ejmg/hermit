@@ -4,10 +4,22 @@ extern crate rocket;
 #[macro_use]
 extern crate serde_derive;
 
-use rocket_contrib::templates::Template;
-
+use csrf::{AesGcmCsrfProtection, CsrfCookie, CsrfProtection, CsrfToken};
+use data_encoding::BASE64;
 use rocket::fairing::AdHoc;
 use rocket::http::{Cookie, Cookies};
+use rocket::response::{Flash, Redirect};
+use rocket::State;
+use rocket_contrib::templates::Template;
+use std::collections::HashMap;
+use std::sync::{Arc, RwLock};
+
+struct AppConfig {
+    pub aes_generator: AesGcmCsrfProtection,
+    pub csrf_auth_tokens: HashMap<CsrfCookie, CsrfToken>,
+}
+
+type HermitConfig = Arc<RwLock<AppConfig>>;
 struct CsrfSecret(String);
 
 #[derive(Serialize)]
@@ -36,11 +48,20 @@ pub struct LoginContext {
 }
 
 #[get("/login")]
-fn login(mut cookies: Cookies) -> Template {
-    // TODO set private cookie
-    cookies.add_private(Cookie::new("user", "value"));
-    // TODO progmatically generate csrf token
-    // TODO associate private cookie with csrf token and store it
+fn login<'r>(mut cookies: Cookies, mut state: State<'r, HermitConfig>) -> Template {
+    // TODO: correctly impl RwLock logic over Csrf hashmap
+    // let (token, cookie) = state
+    //     .aes_generator
+    //     .generate_token_pair(None, 300)
+    //     .expect("couldn't generate token/cookie pair");
+
+    // let token_str = token.b64_string();
+    // let cookie_str = cookie.b64_string();
+
+    // cookies.add_private(Cookie::new("user", "cookie"));
+
+    // state.csrf_auth_tokens.insert(cookie, token);
+
     Template::render(
         "login",
         &LoginContext {
@@ -87,10 +108,26 @@ fn main() {
             let csrf_secret = rocket
                 .config()
                 .get_str("csrf_secret_key")
-                .unwrap_or("csrf-secret-key-here")
+                .unwrap_or("You-dont-have-a-csrf-secret-configured!")
                 .to_string();
-
             Ok(rocket.manage(CsrfSecret(csrf_secret)))
+        }))
+        .attach(AdHoc::on_attach("AppConfig", |rocket| {
+            let csrf_secret = rocket.state::<CsrfSecret>();
+
+            let mut arr_secret: [u8; 32] = Default::default();
+
+            match csrf_secret {
+                Some(secret) => {
+                    arr_secret.copy_from_slice(&secret.0.as_bytes()[0..32]);
+
+                    Ok(rocket.manage(Arc::new(RwLock::new(AppConfig {
+                        aes_generator: AesGcmCsrfProtection::from_key(arr_secret),
+                        csrf_auth_tokens: HashMap::new(),
+                    }))))
+                }
+                None => panic!("No CsrfSecret, unable to generate AppConfig struct"),
+            }
         }))
         .mount("/", routes![index, index_redir, login])
         .launch();
