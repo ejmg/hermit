@@ -223,8 +223,8 @@
     diversion.
 
     we've now changed the return type to =Template=, which is what our route returns to a request that
-    matches on our root index route, ~"/"~. We have an array users that I've filled with dummy data,
-    and in our actual reply we render a template called ~"index"~, which is that tera template we
+    matches on our root index route, =⁣"/"⁣=. We have an array users that I've filled with dummy data,
+    and in our actual reply we render a template called =⁣"index"⁣=, which is that tera template we
     defined earlier, and then you'll notice we construct an object called =TemplateCtx= which has a
     single field, =name=. Let's look at that.
     
@@ -372,7 +372,7 @@
       </html>
     #+END_SRC
 
-    if =title= is some value other than ~""~, then the first if-condition returns true, and we get:
+    if =title= is some value other than =⁣""⁣=, then the first if-condition returns true, and we get:
 
     #+BEGIN_SRC html
       <title>{{ title }} - Hermitblog</title>
@@ -474,3 +474,5 @@
     nifty! notice how the syntax for iterating over the contents of the vector is nearly identical
     to that found it rust proper and, furthermore, that we access the inner content of our posts
     using dot notation... just like rust! nice!
+
+* 
