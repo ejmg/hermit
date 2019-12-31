@@ -137,7 +137,7 @@ dependencies = [
  "base64 0.9.3",
  "ring",
  "time",
- "url",
+ "url 1.7.2",
 ]
 
 [[package]]
@@ -309,11 +309,15 @@ version = "0.1.0"
 dependencies = [
  "csrf",
  "data-encoding",
+ "lazy_static",
+ "regex",
  "rocket",
  "rocket_contrib",
  "serde",
  "serde_derive",
  "serde_json",
+ "validator",
+ "validator_derive",
 ]
 
 [[package]]
@@ -353,7 +357,7 @@ dependencies = [
  "traitobject",
  "typeable",
  "unicase",
- "url",
+ "url 1.7.2",
 ]
 
 [[package]]
@@ -366,6 +370,23 @@ dependencies = [
  "unicode-bidi",
  "unicode-normalization",
 ]
+
+[[package]]
+name = "idna"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "02e2673c30ee86b5b96a9cb52ad15718aa1f966f5ab9ad54a8b95d5ca33120a9"
+dependencies = [
+ "matches",
+ "unicode-bidi",
+ "unicode-normalization",
+]
+
+[[package]]
+name = "if_chain"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c3360c7b59e5ffa2653671fb74b4741a5d343c03f331c0a4aeda42b5c2b0ec7d"
 
 [[package]]
 name = "indexmap"
@@ -633,6 +654,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "31010dd2e1ac33d5b46a5b413495239882813e0369f8ed8a5e266f173602f831"
 
 [[package]]
+name = "percent-encoding"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d4fd5641d01c8f18a23da7b6fe29298ff4b55afcccdf78973b24cf3175fee32e"
+
+[[package]]
 name = "pest"
 version = "2.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -854,7 +881,7 @@ dependencies = [
  "hyper",
  "indexmap",
  "pear",
- "percent-encoding",
+ "percent-encoding 1.0.1",
  "smallvec 0.6.13",
  "state",
  "time",
@@ -1023,7 +1050,7 @@ dependencies = [
  "serde_json",
  "slug",
  "unic-segment",
- "url",
+ "url 1.7.2",
 ]
 
 [[package]]
@@ -1180,9 +1207,50 @@ version = "1.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dd4e7c0d531266369519a4aa4f399d748bd37043b00bde1e4ff1f60a120b355a"
 dependencies = [
- "idna",
+ "idna 0.1.5",
  "matches",
- "percent-encoding",
+ "percent-encoding 1.0.1",
+]
+
+[[package]]
+name = "url"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "75b414f6c464c879d7f9babf951f23bc3743fb7313c081b2e6ca719067ea9d61"
+dependencies = [
+ "idna 0.2.0",
+ "matches",
+ "percent-encoding 2.1.0",
+]
+
+[[package]]
+name = "validator"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7ab5990ba09102e1ddc954d294f09b9ea00fc7831a5813bbe84bfdbcae44051e"
+dependencies = [
+ "idna 0.2.0",
+ "lazy_static",
+ "regex",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "url 2.1.0",
+]
+
+[[package]]
+name = "validator_derive"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e668e9cd05c5009b833833aa1147e5727b5396ea401f22dd1167618eed4a10c9"
+dependencies = [
+ "if_chain",
+ "lazy_static",
+ "proc-macro2 1.0.6",
+ "quote 1.0.2",
+ "regex",
+ "syn 1.0.11",
+ "validator",
 ]
 
 [[package]]

@@ -3,19 +3,29 @@
 extern crate rocket;
 #[macro_use]
 extern crate serde_derive;
+#[macro_use]
+extern crate validator_derive;
+extern crate validator;
+
+#[macro_use]
+extern crate lazy_static;
 
 use csrf::{AesGcmCsrfProtection, CsrfCookie, CsrfProtection, CsrfToken};
 use data_encoding::BASE64;
-use rocket::fairing::AdHoc;
-use rocket::http::RawStr;
-use rocket::http::{Cookie, Cookies};
-use rocket::request::FlashMessage;
-use rocket::request::{Form, FromFormValue, LenientForm};
-use rocket::response::{Flash, Redirect};
-use rocket::State;
 use rocket_contrib::templates::Template;
 use std::collections::HashMap;
 use std::sync::RwLock;
+
+use rocket::{
+    fairing::AdHoc,
+    http::{Cookie, Cookies, RawStr},
+    request::{FlashMessage, Form, FromFormValue, LenientForm},
+    response::{Flash, Redirect},
+    State,
+};
+
+use regex::Regex;
+use validator::{Validate, ValidationError};
 
 struct AppConfig {
     pub aes_generator: AesGcmCsrfProtection,
@@ -23,15 +33,22 @@ struct AppConfig {
 }
 
 type HermitConfig = RwLock<AppConfig>;
+
+lazy_static! {
+    static ref VALID_USERNAME_REGEX: Regex =
+        Regex::new(r"^[[:word:]-]{3,10}").expect("Failed to build user name regex! Wth!?");
+}
 struct CsrfSecret(String);
 
 // TODO impl explicit username and password types
 // TODO impl FromFormValue impl's that enforce validation constraints on explicit types from
 // above Todo item
-#[derive(FromForm)]
-pub struct LoginForm<'f> {
-    username: &'f RawStr,
-    password: &'f RawStr,
+#[derive(Validate, FromForm)]
+pub struct LoginForm {
+    #[validate(regex = "VALID_USERNAME_REGEX")]
+    username: String,
+    #[validate(length(min = 10))]
+    password: String,
     remember_me: bool,
 }
 
@@ -63,7 +80,7 @@ fn login(
         .write()
         .expect("Cannot write, config locked by Readers");
 
-    let (token, cookie) = (cfg)
+    let (token, cookie) = cfg
         .aes_generator
         .generate_token_pair(None, 300)
         .expect("couldn't generate token-cookie pair");
@@ -75,6 +92,11 @@ fn login(
 
     cookies.add_private(Cookie::new("hermit-session", cookie_str));
 
+    // Rocket cannot currently handly 2 instances of Cookies in a single handler. Must drop one
+    // instance within the handler for it to work as intended:
+    // https://rocket.rs/v0.4/guide/requests/#one-at-a-time
+    // https://github.com/SergioBenitez/Rocket/issues/1090#issuecomment-522619500
+    // https://github.com/SergioBenitez/Rocket/issues/934
     drop(cookies);
 
     let mut s = String::new();
@@ -125,25 +147,28 @@ fn index_redir() -> Redirect {
 #[get("/")]
 fn index(flash: Option<FlashMessage>) -> Template {
     let users = ["ghostface killah", "spook", "elias"];
-    let ghost_face_posts = vec![
+    let ghost_posts = vec![
         Post {
-            body: r"Listen, you could never match my velocity
+            body: r"
+Listen, you could never match my velocity
 Too much stamina, glitter in front of cameras
 On the red carpet, still clean your clock like a janitor",
         },
         Post {
-            body: r"Got the Montana booth in front of the store
-Made my usual gun check, safety off, come on Frank
-The moment is here, take your fuckin' hood off
-And tell the driver to stay put",
+            body: r"
+That night, yo, I was hittin' like a spiked bat
+And then you thought I was bugged out, and crazy
+Strapped for nonsense, after me became lazy
+Yo, nobody budge while I shot slugs
+Never shot thugs, I'm runnin' with thugs that flood mugs",
         },
     ];
     Template::render(
         "index",
         &PageContext {
             title: "Home",
-            posts: ghost_face_posts,
             name: users[0],
+            posts: ghost_posts,
         },
     )
 }
@@ -176,14 +201,22 @@ fn main() {
                 None => panic!("No CsrfSecret, unable to generate AppConfig struct"),
             }
         }))
-        .mount(
-            "/",
-            routes![
-                index,
-                index_redir,
-                login,
-                login_submit,
-            ],
-        )
+        .mount("/", routes![index, index_redir, login, login_submit,])
         .launch();
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_regex() {
+        assert!(VALID_USERNAME_REGEX.is_match("elias"));
+        assert!(VALID_USERNAME_REGEX.is_match("e_j-m_g"));
+        assert!(VALID_USERNAME_REGEX.is_match("0e_j-mg1"));
+        assert!(!VALID_USERNAME_REGEX.is_match("😬ejmg"));
+        assert!(!VALID_USERNAME_REGEX.is_match(r"e\jmg"));
+        assert!(!VALID_USERNAME_REGEX.is_match(" "));
+        assert!(!VALID_USERNAME_REGEX.is_match(""));
+    }
 }
