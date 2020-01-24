@@ -1,38 +1,55 @@
-* rocket mega-tutorial
-  i truly have no clue what i am doing. ideally, you will instead opt to learn from [[https://Rocket.rs][Rocket.rs]]
-  directly and take the time to learn how to use the framework properly using Rocket's fantastic
-  documentation.
+* build a web app from scratch with Rust and rocket
 
-  But, since you are here after all...
-
+  i truly have no clue what i am doing, but, since you are here after all...
+   
 ** preliminaries
-   this document is a rustic "porting", of sorts, for Miguel Grinberg's [[https://courses.miguelgrinberg.com/p/flask-mega-tutorial][Flask Mega-Tutorial]]. This
-   guide wouldn't be a thing without it, and I highly recommend it for anyone interested in learning
-   Python, Flask, and even web-dev generally (especially from a non-JS centric perspective). My port
-   is not the guide to learn these things!
+   this document is a rustic "porting", of sorts, for [[https://blog.miguelgrinberg.com/post/about-me][Miguel Grinberg's]] [[https://courses.miguelgrinberg.com/p/flask-mega-tutorial][Flask Mega-Tutorial]]. in
+   particular, i am using his idea of a "microblogging" platform and the steps he takes towards
+   making that, but with rust. this guide wouldn't be a thing without it, and I highly recommend it
+   for anyone interested in learning Python, Flask, and even web-dev generally (especially from a
+   non-JS centric perspective). [[https://courses.miguelgrinberg.com/p/flask-mega-tutorial][buy his book here]].
 
-   furthermore, as i said earlier, i don't want this guide being taken as authoritative or as
-   indicating any intelligence on the part of the author; ideally, you would also not take it as an
-   indicator that i'm cognitively lacking substance.
+   you don't need to be an expert at rust to use this guide, but having familiarity with it as a
+   language is expected, i.e. i will not be explaining syntax or major ideas unique to the rust
+   programming language between the materials of the book.
 
-   while this document is predicated off of the Flask Mega Tutorial, it's hardly *mega*, i.e. i will
-   not be anywhere as thorough as Grinberg in explaining everything. A major motivation for writing
-   this guide is simply to teach myself how to use Rocket in the context of another application I've
-   built before, so I won't bother with filling in the details I already know (or don't need to
-   know). This is the third warning in the guide, so please don't say I didn't say something
-   sooner.
+   finally, *this is very much a WIP*. /i will skip over explanations aggressively early on/. the goal
+   is to make it through the meat of the material, write the bare minimum to keep track where my
+   ported work is relative the book itself, and then come back to fill in the numerous holes and
+   details left in the wake.
 
-   also, ideally, you will have experience with Rust. i won't say that you need to read the whole
-   rust book or anything like that, but the intro chapter written below should not be your first
-   experience with tools like =Rustup= or =Cargo=, nor should you be unfamiliar with things like project
-   organization or how dependencies work.
+   aight, let's just get to it.
 
-   finally, *this is very much a WIP*. /i will skip over explanations aggressively early on/, assuming i
-   ever get to them. the goal is to make it through the meat of the material, write the bare minimum
-   to keep track/serve as checkpoints for where my work is relative the book itself, and then come
-   back to fill in the numerous holes and details left in the wake.
+** TODO planned materials and topics
 
-   aight, let's just get to it i guess.
+   as mentioned before, i am borrowing heavily from Gringberg's [[https://courses.miguelgrinberg.com/p/flask-mega-tutorial][Flask Mega-Tutorial]] in terms of
+   material coverage. as of now, i am hoping to (roughly) cover the following:
+
+   - [X] hello world
+   - [X] templating
+   - [ ] forms
+     + [ ] deriving
+     + [ ] csrf/cookies
+     + [ ] input and routing
+     + [ ] validation
+   - [ ] databases
+     + [ ] diesel
+     + [ ] schemas
+     + [ ] migrations
+     + [ ] postgres/sqlite
+   - [ ] user logins
+     + [ ] tbd...
+   - [ ] user accounts
+     + [ ] tbd...
+   - [ ] testing and error handling
+     + [ ] tbd...
+   - [ ] Pure.css and website styling
+     + [ ] tbd...
+   - [ ] ???
+
+   the source code in this repository will always be ahead of the written material if you want to
+   skip ahead and try to decipher what i'm doing.
+
 ** chapter 1: Hello, World!
    Not much to be done in this chapter, but, then again, so begins most major endeavors with
    software - bad and good alike.
@@ -475,4 +492,4 @@
     to that found it rust proper and, furthermore, that we access the inner content of our posts
     using dot notation... just like rust! nice!
 
-* 
+
