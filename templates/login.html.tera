@@ -10,10 +10,20 @@
         <p>
             <label for="username">username</label><br/>
             <input name="username" id="username" size="32" type="text" value=""/>
+            {%- if error -%}
+                <span style="color: red;">
+                    Valid usernames may only contain alphanumeric, '-', and '_' characters and be of length 3 to 10 characters long.
+                </span>
+            {%- endif -%}
         </p>
         <p>
             <label for="password">password</label><br/>
             <input name="password" id="password" size="32" type="password" value=""/>
+            {%- if error -%}
+                <span style="color: red;">
+                    Valid passwords are of a minimum length of 12 and a maximum length of 64 characters long.
+                </span>
+            {%- endif -%}
         </p>
         <p>
             <input type="checkbox" name="remember" id="remember" value="y" />

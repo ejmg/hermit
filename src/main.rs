@@ -45,9 +45,16 @@ struct CsrfSecret(String);
 // above Todo item
 #[derive(Validate, FromForm)]
 pub struct LoginForm {
-    #[validate(regex = "VALID_USERNAME_REGEX")]
+    #[validate(regex(
+        path = "VALID_USERNAME_REGEX",
+        message = "Invalid username. A-Za-z0-9, '-', and '_' characters and of 3 to 10 characters long."
+    ))]
     username: String,
-    #[validate(length(min = 12, max = 64))]
+    #[validate(length(
+        min = 12,
+        max = 64,
+        message = "Invalid password. Minimum length of 12, maximum of 64."
+    ))]
     password: String,
     remember_me: bool,
 }
@@ -68,6 +75,7 @@ pub struct PageContext {
 pub struct LoginContext {
     csrf_token: String,
     flash: String,
+    error: bool,
 }
 
 #[get("/login")]
@@ -100,10 +108,14 @@ fn login(
     drop(cookies);
 
     let mut s = String::new();
+    let mut err_msg = false;
 
     // If we were redirected via a Flash Redirect, handle that here.
     if let Some(ref msg) = flash {
         s = String::from(msg.msg());
+        if msg.name() == "error" {
+            err_msg = true;
+        }
     }
 
     Template::render(
@@ -111,6 +123,7 @@ fn login(
         &LoginContext {
             csrf_token: token_str,
             flash: s,
+            error: err_msg,
         },
     )
 }
@@ -128,16 +141,13 @@ fn login_submit(
             Redirect::to(uri!(login)),
             "Successfully logged in!",
         )),
-        // TODO: Differentiate on the err type returned by .validate()
-        Err(_) => {
-            println!("ERROR ?");
-            Err(Flash::error(
-                Redirect::to(uri!(login)),
-                "Invalid username/password.",
-            ))
-        }
+        Err(_) => Err(Flash::error(
+            Redirect::to(uri!(login)),
+            "Login failed: Invalid username or password.",
+        )),
     }
 }
+
 #[get("/index")]
 fn index_redir() -> Redirect {
     Redirect::permanent("/")
