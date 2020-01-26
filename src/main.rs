@@ -47,7 +47,7 @@ struct CsrfSecret(String);
 pub struct LoginForm {
     #[validate(regex = "VALID_USERNAME_REGEX")]
     username: String,
-    #[validate(length(min = 10))]
+    #[validate(length(min = 12, max = 64))]
     password: String,
     remember_me: bool,
 }
@@ -70,7 +70,7 @@ pub struct LoginContext {
     flash: String,
 }
 
-#[get("/login", rank = 0)]
+#[get("/login")]
 fn login(
     flash: Option<FlashMessage>,
     mut cookies: Cookies,
@@ -101,8 +101,8 @@ fn login(
 
     let mut s = String::new();
 
+    // If we were redirected via a Flash Redirect, handle that here.
     if let Some(ref msg) = flash {
-        println!("value of msg.msg(): {:?}", msg.msg());
         s = String::from(msg.msg());
     }
 
@@ -122,21 +122,20 @@ fn login_submit(
     mut cookies: Cookies,
 ) -> Result<Flash<Redirect>, Flash<Redirect>> {
     let mut cfg = state.read().expect("Cannot read, config locked by Writer");
-    println!("value of login.username: {:?}", login.username.as_str());
-    println!("value of login.password: {:?}", login.password.as_str());
 
-    if login.username.as_str() != "" && login.password.as_str() != "" {
-        println!("About to redirect...");
-        Ok(Flash::success(
+    match login.validate() {
+        Ok(_) => Ok(Flash::success(
             Redirect::to(uri!(login)),
             "Successfully logged in!",
-        ))
-    } else {
-        println!("Error on login...");
-        Err(Flash::error(
-            Redirect::to(uri!(login)),
-            "Invalid username/password.",
-        ))
+        )),
+        // TODO: Differentiate on the err type returned by .validate()
+        Err(_) => {
+            println!("ERROR ?");
+            Err(Flash::error(
+                Redirect::to(uri!(login)),
+                "Invalid username/password.",
+            ))
+        }
     }
 }
 #[get("/index")]
