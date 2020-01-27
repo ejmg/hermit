@@ -13,6 +13,9 @@ extern crate lazy_static;
 use csrf::{AesGcmCsrfProtection, CsrfCookie, CsrfProtection, CsrfToken};
 use data_encoding::BASE64;
 use rocket_contrib::templates::Template;
+use serde_json::value::from_value;
+use serde_json::value::to_value;
+use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::sync::RwLock;
 
@@ -26,6 +29,8 @@ use rocket::{
 
 use regex::Regex;
 use validator::{Validate, ValidationError};
+
+use rocket_contrib::templates::tera::{GlobalFn, Result as TeraResult};
 
 struct AppConfig {
     pub aes_generator: AesGcmCsrfProtection,
@@ -182,9 +187,39 @@ Never shot thugs, I'm runnin' with thugs that flood mugs",
     )
 }
 
+fn make_url_for(urls: BTreeMap<String, String>) -> GlobalFn {
+    Box::new(move |args| -> TeraResult<serde_json::Value> {
+        match args.get("name") {
+            Some(val) => match from_value::<String>(val.clone()) {
+                Ok(v) => Ok(to_value(urls.get(&v).unwrap()).unwrap()),
+                Err(_) => Err("oops".into()),
+            },
+            None => Err("oops".into()),
+        }
+    })
+}
+
 fn main() {
+    let app_routes = routes![index, index_redir, login, login_submit,];
+    let mut url_for_map = BTreeMap::new();
+    for route in app_routes {
+        match (route.name, route.uri.path()) {
+            (Some(name), path) => {
+                url_for_map.insert(String::from(name), String::from(path));
+            }
+            (_, path) => panic!(
+                "Could not generate a name for each path provided by route!, path: {}",
+                path
+            ),
+        }
+    }
+
     rocket::ignite()
-        .attach(Template::fairing())
+        .attach(Template::custom(|engine| {
+            engine
+                .tera
+                .register_function("url_for", make_url_for(url_for_map))
+        }))
         .attach(AdHoc::on_attach("CSRF Secret Key", |rocket| {
             let csrf_secret = rocket
                 .config()
