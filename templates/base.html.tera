@@ -8,8 +8,8 @@
     </head>
     <body>
       <div>Hermitblog:
-        <a href="/index">Home</a>
-        <a href="/login">Login</a>
+        <a href={{ url_for(name="index") }}>Home</a>
+        <a href={{ url_for(name="login") }}>Login</a>
       </div>
         <hr>
         {% block content %}

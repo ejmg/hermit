@@ -215,10 +215,10 @@ fn main() {
     }
 
     rocket::ignite()
-        .attach(Template::custom(|engine| {
+        .attach(Template::custom(move |engine| {
             engine
                 .tera
-                .register_function("url_for", make_url_for(url_for_map))
+                .register_function("url_for", make_url_for(url_for_map.clone()))
         }))
         .attach(AdHoc::on_attach("CSRF Secret Key", |rocket| {
             let csrf_secret = rocket
