@@ -1,0 +1,16 @@
+# readily copied from https://github.com/clifinger/canduma/blob/master/docker-compose.yml
+version: '3.1'
+
+services:
+  pg:
+    image: postgres:12-alpine
+    command:
+      - 'postgres'
+      - '-c'
+      - 'max_connections=100'
+      - '-c'
+      - 'shared_buffers=256MB'
+    environment:
+      POSTGRES_PASSWORD: hermitblog
+    ports:
+      - 5430:5432

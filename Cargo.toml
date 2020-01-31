@@ -24,4 +24,4 @@ lazy_static = "1.4.0"
 version = "0.4.2"
 # rocket_contrib = { git = "https://github.com/SergioBenitez/Rocket/contrib", branch = "async" }
 default-features = false
-features = ["tera_templates"]
+features = ["tera_templates", "diesel_postgres_pool"]

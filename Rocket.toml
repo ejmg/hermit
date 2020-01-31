@@ -14,3 +14,10 @@ secret_key = "zHliJJVpfORoPoTwsFDj9a77zYhnBzXuDX7VtjHplV4="
 # Similar to secret_key, DO NOT COMMIT this in publicly available code!
 csrf_secret_key = "zkVLsc2pKescgc8IC5pRaJV+WcPptr0k016qg4BOr0I="
 limits = { forms = 32768 }
+
+
+[global.databases]
+    hermit_dev = { url = "postgres://postgres:hermitblog@localhost:5430" }
+
+# put this in .env for path equiv:
+# ROCKET_DATABASES='{hermit_dev={url="postgres://postgres:hermitblog@localhost:5430"}}'
