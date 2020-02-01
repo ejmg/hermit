@@ -2,6 +2,8 @@
 #[macro_use]
 extern crate rocket;
 #[macro_use]
+extern crate rocket_contrib;
+#[macro_use]
 extern crate serde_derive;
 #[macro_use]
 extern crate validator_derive;
@@ -12,6 +14,10 @@ extern crate lazy_static;
 
 use csrf::{AesGcmCsrfProtection, CsrfCookie, CsrfProtection, CsrfToken};
 use data_encoding::BASE64;
+use rocket_contrib::databases::diesel;
+
+#[database("hermit_dev")]
+struct DevDbConn(diesel::PgConnection);
 use rocket_contrib::templates::Template;
 use serde_json::value::from_value;
 use serde_json::value::to_value;
@@ -31,6 +37,8 @@ use regex::Regex;
 use validator::{Validate, ValidationError};
 
 use rocket_contrib::templates::tera::{GlobalFn, Result as TeraResult};
+
+pub mod models;
 
 struct AppConfig {
     pub aes_generator: AesGcmCsrfProtection,
@@ -215,6 +223,7 @@ fn main() {
     }
 
     rocket::ignite()
+        .attach(DevDbConn::fairing())
         .attach(Template::custom(move |engine| {
             engine
                 .tera

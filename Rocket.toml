@@ -17,7 +17,7 @@ limits = { forms = 32768 }
 
 
 [global.databases]
-    hermit_dev = { url = "postgres://postgres:hermitblog@localhost:5430" }
+hermit_dev = { url = "postgres://postgres:hermitblog@localhost:5430" }
 
 # put this in .env for path equiv:
 # ROCKET_DATABASES='{hermit_dev={url="postgres://postgres:hermitblog@localhost:5430"}}'
