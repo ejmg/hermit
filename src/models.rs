@@ -1,4 +1,5 @@
-use rocket_contrib::databases::diesel::Queryable;
+use chrono::NaiveDateTime;
+use rocket_contrib::databases::diesel::{Associations, Identifiable, Queryable};
 
 #[derive(Queryable)]
 pub struct User {
@@ -6,4 +7,12 @@ pub struct User {
     username: String,
     email: String,
     password_hash: String,
+}
+
+#[derive(Queryable)]
+pub struct Post {
+    id: u32,
+    body: String,
+    timestamp: NaiveDateTime,
+    user_id: u32,
 }

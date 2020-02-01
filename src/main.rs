@@ -7,6 +7,7 @@ extern crate rocket_contrib;
 extern crate serde_derive;
 #[macro_use]
 extern crate validator_derive;
+extern crate chrono;
 extern crate validator;
 
 #[macro_use]
