@@ -3,4 +3,4 @@ create table users (
        username varchar not null,
        email varchar not null,
        password_hash varchar not null
-)
+);
