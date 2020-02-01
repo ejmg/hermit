@@ -541,3 +541,41 @@
     very weird subject matter of garfield being some kind of nietzschean ubermensch; however, the
     closing paragraph witih "thank you for reading!" would remain preserved and so would the
     copyright block since it was never overriden.
+
+    let's apply this now to our application by refactoring out some duplicate code. under templates,
+    create =base.html.tera= containing the following:
+
+    #+BEGIN_SRC html
+      <html>
+          <head>
+              {% if title %}
+                  <title>{{ title }} - Hermitblog</title>
+              {% else %}
+                  <title>Welcome to Hermitblog</title>
+              {% endif %}
+          </head>
+          <body>
+              <div>Hermitblog: <a href="/index">Home</a></div>
+              <hr>
+              {% block content %}
+              {% endblock content %}
+          </body>
+      </html>
+    #+END_SRC
+
+    and then update =index.html.tera= to have:
+
+    #+BEGIN_SRC html
+      {% extends "base" %}
+
+      {% block content %}
+          <h1>Hello, {{ name }}!</h1>
+          {% for post in posts %}
+              <div>
+                  <p>{{ name }} says: {{ post.body }}</p>
+              </div>
+          {% endfor %}
+      {% endblock content %}
+    #+END_SRC
+
+    our app is now setup to use tera's template inheritance ✨.
