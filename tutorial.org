@@ -492,4 +492,52 @@
     to that found it rust proper and, furthermore, that we access the inner content of our posts
     using dot notation... just like rust! nice!
 
+*** template inheritance
 
+    a major selling point of templating languages like jinja and tera is that you avoid redundancy
+    by modularizing UI in the same way you would with server side code. to do, we need to take
+    advantage of something called [[https://tera.netlify.com/docs/#inheritance][template inheritance]].
+
+    the way it works is pretty straight forward. we have a "base" template (aka "the parent"),
+    called =base.html.tera=, and let's say it has the following:
+
+    #+BEGIN_SRC html
+      <html>
+        <head>
+          {% block head %}
+          <title> hello! </title>
+          {% endblock head %}
+        </head>
+        <body>
+          {% block body %}
+          <p> welcome to my blog! <p>
+          {% endblock body %}
+          <p> thank you for reading! <p>
+          {% block copyright %}
+          <p> wu tang clan, all rights reserved </p>
+          {% endblock copyright %}
+        </body>
+      </html>
+    #+END_SRC
+
+    notice that we now have these peculiar ={% block NAME %}= style templating expressions... these
+    block tags are sections of templating that child templates /can overide/. overriding is trivial to
+    perform, e.g. in =foo.html.tera=, let's have the following code:
+
+    #+BEGIN_SRC html
+      {% extends "base" %}
+
+      {% block head}
+        <title> a very serious blogpost <title>
+      {% endblock head %}
+
+      {% block body %}
+       <p>in this blogpost, we will discuss the nietzschean ethics of garfield the cat...</p>
+      {% endblock body %}
+    #+END_SRC
+
+    when =foo= gets rendered, you will see the corresponding blocks it explicitly overrided be
+    replaced with the child template's content, i.e. "a very serious blogpost" for the title and the
+    very weird subject matter of garfield being some kind of nietzschean ubermensch; however, the
+    closing paragraph witih "thank you for reading!" would remain preserved and so would the
+    copyright block since it was never overriden.
