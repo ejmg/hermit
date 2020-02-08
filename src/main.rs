@@ -7,18 +7,21 @@ extern crate rocket_contrib;
 extern crate serde_derive;
 #[macro_use]
 extern crate validator_derive;
+extern crate argon2;
 extern crate chrono;
 extern crate validator;
 
 #[macro_use]
 extern crate lazy_static;
 
+use argon2::{Config as ArgonConfig, ThreadMode, Variant as ArgonVariant, Version as ArgonVersion};
 use csrf::{AesGcmCsrfProtection, CsrfCookie, CsrfProtection, CsrfToken};
 use data_encoding::BASE64;
 use rocket_contrib::databases::diesel;
 
 #[database("hermit_dev")]
 struct DevDbConn(diesel::PgConnection);
+
 use rocket_contrib::templates::Template;
 use serde_json::value::from_value;
 use serde_json::value::to_value;
@@ -41,17 +44,20 @@ use rocket_contrib::templates::tera::{GlobalFn, Result as TeraResult};
 
 pub mod models;
 
-struct AppConfig {
+struct AppConfig<'a> {
     pub aes_generator: AesGcmCsrfProtection,
     pub csrf_auth_tokens: HashMap<CsrfCookie, CsrfToken>,
+    pub pw_config: ArgonConfig<'a>,
+    pub pw_salt: &'a str,
 }
 
-type HermitConfig = RwLock<AppConfig>;
+type HermitConfig<'a> = RwLock<AppConfig<'a>>;
 
 lazy_static! {
     static ref VALID_USERNAME_REGEX: Regex =
         Regex::new(r"^[[:word:]-]{3,10}").expect("Failed to build user name regex! Wth!?");
 }
+
 struct CsrfSecret(String);
 
 // TODO impl explicit username and password types
@@ -209,6 +215,7 @@ fn make_url_for(urls: BTreeMap<String, String>) -> GlobalFn {
 }
 
 fn main() {
+    // TODO: possibly declare in a lazy static?
     let app_routes = routes![index, index_redir, login, login_submit,];
     let mut url_for_map = BTreeMap::new();
     for route in app_routes {
@@ -242,7 +249,7 @@ fn main() {
             let csrf_secret = rocket.state::<CsrfSecret>();
 
             let mut arr_secret: [u8; 32] = Default::default();
-
+            let salt = "very-secret-salt!!!";
             match csrf_secret {
                 Some(secret) => {
                     arr_secret.copy_from_slice(&secret.0.as_bytes()[0..32]);
@@ -250,6 +257,29 @@ fn main() {
                     Ok(rocket.manage(RwLock::new(AppConfig {
                         aes_generator: AesGcmCsrfProtection::from_key(arr_secret),
                         csrf_auth_tokens: HashMap::new(),
+                        // while i'm not using argonautica, it's demo config has very nice
+                        // documentation that helps explain the underlying API/design of Argon2 and
+                        // the parameter values to consider:
+                        // https://docs.rs/argonautica/0.2.0/argonautica/#configuration
+                        pw_config: ArgonConfig {
+                            variant: ArgonVariant::Argon2i,
+                            version: ArgonVersion::Version13,
+                            // x4 default of 4096kb, so 16mb
+                            mem_cost: 16384,
+                            // x4 default of 3, so 12 passes
+                            time_cost: 12,
+                            thread_mode: ThreadMode::Parallel,
+                            // my dev machine (i7-8550U) has 4 physical cores with 8 threads, so
+                            lanes: 4,
+                            // default is 32 and that seems strong enough with above choices.
+                            hash_length: 32,
+                            // this ideally shouldn't be elided but simultaneously i don't know
+                            // where to store this value as opposed to my hash in production????
+                            secret: &[],
+                            // i simply don't fully understand what ad is for
+                            ad: &[],
+                        },
+                        pw_salt: salt,
                     })))
                 }
                 None => panic!("No CsrfSecret, unable to generate AppConfig struct"),
