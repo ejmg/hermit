@@ -391,6 +391,7 @@ dependencies = [
  "data-encoding",
  "lazy_static",
  "regex",
+ "ring",
  "rocket",
  "rocket_contrib",
  "rust-argon2",

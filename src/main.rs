@@ -41,8 +41,8 @@ use regex::Regex;
 use validator::{Validate, ValidationError};
 
 use rocket_contrib::templates::tera::{GlobalFn, Result as TeraResult};
-
 pub mod models;
+pub mod util;
 
 struct AppConfig<'a> {
     pub aes_generator: AesGcmCsrfProtection,
