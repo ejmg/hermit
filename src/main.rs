@@ -48,10 +48,12 @@ struct AppConfig<'a> {
     pub aes_generator: AesGcmCsrfProtection,
     pub csrf_auth_tokens: HashMap<CsrfCookie, CsrfToken>,
     pub pw_config: ArgonConfig<'a>,
-    pub pw_salt: &'a str,
 }
 
 type HermitConfig<'a> = RwLock<AppConfig<'a>>;
+
+const CSRF_COOKIE_ID: &str = "hermit-cookie";
+const SESSION_COOKIE_ID: &str = "hermit-session";
 
 lazy_static! {
     static ref VALID_USERNAME_REGEX: Regex =
@@ -76,6 +78,7 @@ pub struct LoginForm {
         message = "Invalid password. Minimum length of 12, maximum of 64."
     ))]
     password: String,
+    csrf_token: String,
     remember_me: bool,
 }
 
@@ -118,7 +121,7 @@ fn login(
     let token_str: String = token.b64_string();
     let cookie_str = cookie.b64_string();
 
-    cookies.add_private(Cookie::new("hermit-session", cookie_str));
+    cookies.add_private(Cookie::new(CSRF_COOKIE_ID, cookie_str));
 
     // Rocket cannot currently handly 2 instances of Cookies in a single handler. Must drop one
     // instance within the handler for it to work as intended:
@@ -156,15 +159,48 @@ fn login_submit(
 ) -> Result<Flash<Redirect>, Flash<Redirect>> {
     let mut cfg = state.read().expect("Cannot read, config locked by Writer");
 
-    match login.validate() {
-        Ok(_) => Ok(Flash::success(
-            Redirect::to(uri!(login)),
-            "Successfully logged in!",
-        )),
-        Err(_) => Err(Flash::error(
-            Redirect::to(uri!(login)),
-            "Login failed: Invalid username or password.",
-        )),
+    // TODO: this match logic/block can and should probably be broken down because it's a bit
+    // much.
+    match cookies.get_private(CSRF_COOKIE_ID) {
+        Some(c) => {
+            let decoded_token = BASE64
+                .decode(login.csrf_token.as_bytes())
+                .expect("csrf token not base64");
+            let decoded_cookie = BASE64
+                .decode(c.value().as_bytes())
+                .expect("csrf cookie not base64");
+
+            let parsed_token = cfg
+                .aes_generator
+                .parse_token(&decoded_token)
+                .expect("token could not be parsed");
+
+            let parsed_cookie = cfg
+                .aes_generator
+                .parse_cookie(&decoded_cookie)
+                .expect("cookie could not be parsed");
+
+            // TODO use cfg.csrf_auth_tokens.get(&decoded_cookie) to make egregious
+            // check that token-pair wasn't spoofed or something, idk? seems unnecessary afterall?
+            if cfg
+                .aes_generator
+                .verify_token_pair(&parsed_token, &parsed_cookie)
+            {
+                match login.validate() {
+                    Ok(_) => Ok(Flash::success(
+                        Redirect::to(uri!(login)),
+                        "Successfully logged in!",
+                    )),
+                    Err(_) => Err(Flash::error(
+                        Redirect::to(uri!(login)),
+                        "Login failed: Invalid username or password.",
+                    )),
+                }
+            } else {
+                panic!("Cookie and Token do not match, get out")
+            }
+        }
+        None => panic!("No Csrf Cookie found in headers"),
     }
 }
 
@@ -249,7 +285,6 @@ fn main() {
             let csrf_secret = rocket.state::<CsrfSecret>();
 
             let mut arr_secret: [u8; 32] = Default::default();
-            let salt = "very-secret-salt!!!";
             match csrf_secret {
                 Some(secret) => {
                     arr_secret.copy_from_slice(&secret.0.as_bytes()[0..32]);
@@ -279,7 +314,6 @@ fn main() {
                             // i simply don't fully understand what ad is for
                             ad: &[],
                         },
-                        pw_salt: salt,
                     })))
                 }
                 None => panic!("No CsrfSecret, unable to generate AppConfig struct"),
