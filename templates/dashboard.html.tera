@@ -1,0 +1,24 @@
+{% extends "base" %}
+
+{% block navbar %}
+    <div class="navbar">
+        <span class="home-text"><a href="/">{{ username }}</a></span>
+        <span class="nav"><a href="/logout">logout</a></span>
+    </div>
+{% endblock navbar %}
+
+{% block content %}
+    <div class="create_post">
+        <form action="/create_post" method="post">
+            <input type="text" name="text" value="come on, you live for this bitch" />
+            <button type="submit" name="">SUBMIT HOT FIRE</button>
+        </form>
+    </div>
+    <div class="dashboard_content">
+        <ol>
+            {%- for post in posts -%}
+                <li>{{ post.text }}</li>
+            {%- endfor -%}
+        </ol>
+    </div>
+{% endblock content %}

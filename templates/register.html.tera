@@ -1,0 +1,17 @@
+{% extends "base" %}
+
+{% block content %}
+    <h1>register</h1>
+    <form method="POST" class="register_form" action="/register">
+        <label for="username">username</label>
+        <input type="text" name="username" value="" />
+        <label for="email">email</label>
+        <input type="text" name="email" value="" />
+        <label for="password">password</label>
+        <input type="password" name="password" value="" />
+        <label for="verify_password">confirm password</label>
+        <input type="password" name="verify_password" value="" />
+        <button type="submit">submit</button>
+    </form>
+{% endblock content %}
+

@@ -1,0 +1,22 @@
+[package]
+name = "hermit"
+version = "0.1.0"
+authors = ["elias <elias.jm.garcia@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rocket = { version = "0.4.6", features = ["private-cookies"]}
+diesel = { version = "1.4.4", features = ["postgres", "chrono"] }
+chrono = { version = "0.4", features = ["serde"]}
+serde = {version = "1", features = ["derive"]}
+validator = { version = "0.12", features = ["derive", "validator_derive"] }
+regex = "1"
+lazy_static = "1.4.0"
+pwhash = "0.3"
+
+[dependencies.rocket_contrib]
+version = "0.4.6"
+default-features = false
+features = ["tera_templates", "diesel_postgres_pool"]

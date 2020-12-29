@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8"/>
+        {% block title %}
+            <title>hermit microblog</title>
+        {% endblock title %}
+        
+    </head>    
+    <body>
+        {% block navbar %}
+            <div class="navbar">
+                <span class="home-text"><a href="/">hermit</a></span>
+                <span class="nav"><a href="/login">login</a></span>
+            </div>
+        {% endblock navbar %}
+            <hr/>        
+        {% block content %}
+            <h1>welcome to hermit!</h1>
+            <p>hermit is a shitty microblog written as quick as possible by an inept programmer</p>
+            <h2>work in progress!!!!</h2>
+        {% endblock content %}
+    </body>
+</html>

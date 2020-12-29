@@ -1,0 +1,39 @@
+* hermit
+  a shitty microblog in the rough vein of early twitter
+** TODO [3/5] speedrun any %
+   - [X] hello world
+   - [X] templating (tera)
+     + [X] landing page
+     + [X] login/register
+     + [X] dashboard
+   - [X] database
+     + [X] diesel setup
+     + [X] migrations
+       * [X] init
+       * [X] schema
+     + [X] basic models
+       * [X] user model
+       * [X] post model
+   - [-] form validation
+     + [X] password length
+     + [X] post length
+     + [X] username length/validity
+     + [X] email validity
+     + [ ] form data
+       * [ ] login
+       * [ ] register
+       * [ ] create post
+   - [ ] basic user application logic
+     + [ ] user registration
+       * [ ] diesel ORM query
+     + [ ] user login
+       * [ ] diesel ORM query
+       * [ ] cookie handling
+     + [ ] user logout
+       * [ ] diesel ORM query
+     + [ ] create post
+       * [ ] diesel ORM query
+       * [ ] update dashboard template
+     + [ ] list posts
+       * [ ] diesel orm query
+       * [ ] update template

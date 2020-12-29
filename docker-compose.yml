@@ -10,6 +10,8 @@ services:
       - '-c'
       - 'shared_buffers=256MB'
     environment:
-      POSTGRES_PASSWORD: hermitblog
+      POSTGRES_PASSWORD: hermitdb
+      POSTGRES_USER: hermitdb
+      POSTGRES_DB: hermitdb
     ports:
       - 5430:5432
